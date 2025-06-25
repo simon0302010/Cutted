@@ -41,4 +41,4 @@ pip install .
 Run the package:
 
 ```bash
-python -m
+python -m cutted
