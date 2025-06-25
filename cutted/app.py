@@ -3,11 +3,7 @@ import threading
 import customtkinter
 from .core.logger import *
 from .core import audio_processor
-
-from matplotlib.backend_bases import key_press_handler
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
-                                               NavigationToolbar2Tk)
-from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 import simpleaudio as sa  # Add this import
 

@@ -17,7 +17,8 @@ dependencies = [
     "matplotlib",
     "numpy",
     "pydub",
-    "simpleaudio"
+    "simpleaudio",
+    "google-genai"
 ]
 
 [project.urls]

@@ -2,9 +2,6 @@ from pydub import *
 from pydub.utils import ratio_to_db
 from .logger import *
 import numpy as np
-from matplotlib.backend_bases import key_press_handler
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
-                                               NavigationToolbar2Tk)
 from matplotlib.figure import Figure
 
 class AudioProcessor:

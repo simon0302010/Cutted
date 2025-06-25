@@ -42,3 +42,4 @@ Run the package:
 
 ```bash
 python -m cutted
+```
