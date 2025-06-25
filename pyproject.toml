@@ -14,9 +14,10 @@ authors = [
 ]
 dependencies = [
     "customtkinter",
-    "pydub",
+    "matplotlib",
     "numpy",
-    "matplotlib"
+    "pydub",
+    "simpleaudio"
 ]
 
 [project.urls]
