@@ -44,14 +44,17 @@ class CuttedApp:
         button = customtkinter.CTkButton(self.root, text="Load audio", command=self.select_file)
         button.place(relx=0.5, rely=1.0, anchor="s", y=-30)
 
-        self.play_button = customtkinter.CTkButton(self.root, text="Play", command=self.play_audio)
-        self.play_button.place(relx=0.3, rely=1.0, anchor="s", y=-80)
-        self.stop_button = customtkinter.CTkButton(self.root, text="Stop", command=self.stop_audio)
-        self.stop_button.place(relx=0.7, rely=1.0, anchor="s", y=-80)
+        self.textbox = customtkinter.CTkTextbox(self.root, height=10)
+        self.textbox.place(relx=0.5, rely=1.0, anchor="center", relwidth=0.8, y=-90)
+
+        self.play_button = customtkinter.CTkButton(self.root, text="Play", command=self.play_audio, width=50)
+        self.play_button.place(relx=0.3, rely=1.0, anchor="s", y=-30)
+        self.stop_button = customtkinter.CTkButton(self.root, text="Stop", command=self.stop_audio, width=50)
+        self.stop_button.place(relx=0.7, rely=1.0, anchor="s", y=-30)
     
     def on_resize(self, event):
         if hasattr(self, "slider") and self.slider is not None:
-            new_width = self.root.winfo_width() - 40
+            new_width = max(self.root.winfo_width() - 40, 100)
             self.slider.configure(width=new_width)
     
     def select_file(self):
