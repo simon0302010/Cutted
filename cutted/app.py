@@ -44,13 +44,24 @@ class CuttedApp:
         button = customtkinter.CTkButton(self.root, text="Load audio", command=self.select_file)
         button.place(relx=0.5, rely=1.0, anchor="s", y=-30)
 
-        self.textbox = customtkinter.CTkTextbox(self.root, height=10)
-        self.textbox.place(relx=0.5, rely=1.0, anchor="center", relwidth=0.8, y=-90)
-
         self.play_button = customtkinter.CTkButton(self.root, text="Play", command=self.play_audio, width=50)
         self.play_button.place(relx=0.3, rely=1.0, anchor="s", y=-30)
         self.stop_button = customtkinter.CTkButton(self.root, text="Stop", command=self.stop_audio, width=50)
         self.stop_button.place(relx=0.7, rely=1.0, anchor="s", y=-30)
+
+        self.input_frame = customtkinter.CTkFrame(self.root, fg_color="transparent", height=36)
+        self.input_frame.place(relx=0.5, rely=1.0, anchor="s", y=-90, relwidth=0.8)
+
+        self.entry = customtkinter.CTkEntry(self.input_frame, height=32)
+        self.entry.pack(side="left", fill="both", expand=True, padx=(0, 5))
+
+        self.send_button = customtkinter.CTkButton(
+            self.input_frame,
+            text="➤",
+            width=36,
+            command=self.send_prompt
+        )
+        self.send_button.pack(side="right")
     
     def on_resize(self, event):
         if hasattr(self, "slider") and self.slider is not None:
@@ -135,6 +146,11 @@ class CuttedApp:
         if self.play_obj is not None and self.is_playing:
             self.play_obj.stop()
             self.is_playing = False
+            
+    def send_prompt(self):
+        text = self.entry.get()
+        print(f"Prompt: {text}")
+        self.entry.delete(0, "end")
 
     def run(self):
         self.root.mainloop()
