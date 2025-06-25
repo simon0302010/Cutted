@@ -18,7 +18,8 @@ dependencies = [
     "numpy",
     "pydub",
     "simpleaudio",
-    "google-genai"
+    "google-genai",
+    "dotenv"
 ]
 
 [project.urls]
