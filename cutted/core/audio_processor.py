@@ -29,8 +29,9 @@ class AudioProcessor:
                 
         times = np.linspace(0, len(samples) / self.audio.frame_rate, num=len(samples))
         
-        fig = Figure(figsize=(5, 4))
+        fig = Figure(figsize=(5, 4), facecolor="#242424")
         ax = fig.add_subplot()
+        ax.set_facecolor("#242424")
         line, = ax.plot(times, samples)
         
         # remove text
@@ -38,6 +39,12 @@ class AudioProcessor:
         ax.set_xlabel("")
         ax.set_ylabel("")
         ax.set_yticks([])
+        
+        ax.margins(0)
+        fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+        
+        ax.set_xlim(times[0], times[-1])
+        ax.set_ylim(np.min(samples), np.max(samples))
         
         return fig
     
