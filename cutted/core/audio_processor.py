@@ -26,14 +26,16 @@ class AudioProcessor:
         if self.audio.channels == 2:
             samples = samples.reshape((-1, 2))
             samples = samples.mean(axis=1)
-                
+        
+        samples = samples / np.max(np.abs(samples))
+        
         times = np.linspace(0, len(samples) / self.audio.frame_rate, num=len(samples))
         print(times)
         
         fig = Figure(figsize=(5, 4), facecolor="#242424")
         ax = fig.add_subplot()
         ax.set_facecolor("#242424")
-        line, = ax.plot(times, samples)
+        line, = ax.plot(times, samples, color="cyan", linewidth=1.5)
         
         # remove text
         ax.set_title("")
