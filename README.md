@@ -1,6 +1,8 @@
 # Cutted
 AI-powered audio editor controllable via natural language
 
+Note: This app is currently not functional.
+
 # Installation
 
 Install dependencies:
