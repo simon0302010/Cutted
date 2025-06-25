@@ -26,11 +26,22 @@ class AudioProcessor:
         if self.audio.channels == 2:
             samples = samples.reshape((-1, 2))
             samples = samples.mean(axis=1)
-            
+                
         times = np.linspace(0, len(samples) / self.audio.frame_rate, num=len(samples))
         
         fig = Figure(figsize=(5, 4))
         ax = fig.add_subplot()
         line, = ax.plot(times, samples)
         
+        # remove text
+        ax.set_title("")
+        ax.set_xlabel("")
+        ax.set_ylabel("")
+        ax.set_yticks([])
+        
         return fig
+    
+    def get_lenght(self):
+        self.duration = self.audio.duration_seconds
+        self.duration = round(self.duration, 2)
+        return self.duration
