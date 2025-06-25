@@ -52,3 +52,12 @@ class AudioProcessor:
         self.duration = self.audio.duration_seconds
         self.duration = round(self.duration, 2)
         return self.duration
+    
+    def cut(self, start, end):
+        if type(start) == list and type(end) == list:
+            print("Cutting multiple segments")
+        
+        start_ms = round(start * 1000)
+        end_ms = round(end * 1000)
+        
+        self.audio = self.audio[:start_ms] + self.audio[end_ms:]
