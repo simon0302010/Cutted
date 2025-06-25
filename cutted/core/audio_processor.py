@@ -17,7 +17,7 @@ class AudioProcessor:
         self.audio = self.audio.apply_gain(ratio_to_db(volume))
         print_info(f"Loaded {self.audio_path}")
         
-    def plot_audio(self, save_path=None):
+    def plot_audio(self):
         if self.audio is None:
             print_fail("No audio loaded.")
             return
@@ -28,6 +28,7 @@ class AudioProcessor:
             samples = samples.mean(axis=1)
                 
         times = np.linspace(0, len(samples) / self.audio.frame_rate, num=len(samples))
+        print(times)
         
         fig = Figure(figsize=(5, 4), facecolor="#242424")
         ax = fig.add_subplot()
