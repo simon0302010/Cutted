@@ -1,6 +1,7 @@
 import time
 import threading
 import customtkinter
+from .core import gemini
 from .core.logger import *
 from .core import audio_processor
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -12,6 +13,7 @@ customtkinter.set_appearance_mode("Dark")
 class CuttedApp:
     def __init__(self):
         self.AudioProcessor = audio_processor.AudioProcessor()
+        self.gemini = gemini.GeminiClient()
         self.canvas = None
         self.cursor_line = None
         self.last_slider_update = 0
@@ -147,6 +149,14 @@ class CuttedApp:
         text = self.entry.get()
         print(f"Prompt: {text}")
         self.entry.delete(0, "end")
+        
+        gemini_result = self.gemini.generate(text)
+        
+        if gemini_result:
+            print(gemini_result.name)
+            args = gemini_result.args
+            self.AudioProcessor.cut(args["start"][0], args["end"][0])
+            self.update_plot()
 
     def run(self):
         self.root.mainloop()
