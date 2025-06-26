@@ -1,12 +1,10 @@
 import time
-import threading
 import customtkinter
+import tkinter.messagebox as messagebox
 from .core import gemini
 from .core.logger import *
 from .core import audio_processor
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-
-import simpleaudio as sa  # Add this import
 
 customtkinter.set_appearance_mode("Dark")
 
@@ -134,16 +132,25 @@ class CuttedApp:
             return
         
         text = self.entry.get()
-        print(f"Prompt: {text}")
+        full_prompt = f"You are a audio editing AI. You are controllable via natural language and editing a audio file. The audio file is {round(self.AudioProcessor.get_lenght())}s long."
+        full_prompt += f"\n\nUser Prompt: {text}"
         self.entry.delete(0, "end")
         
-        gemini_result = self.gemini.generate(text)
+        function_call, text_result = self.gemini.generate(full_prompt)
         
-        if gemini_result:
-            print(gemini_result.name)
-            args = gemini_result.args
-            self.AudioProcessor.cut(args["start"][0], args["end"][0])
+        if function_call:
+            print_info(f"Gemini called {function_call.name}")
+            if function_call.name == "cut_audio":
+                print_info("Cut function called")
+                args = function_call.args
+                result = self.AudioProcessor.cut(args["start"], args["end"])
+                if not result:
+                    messagebox.showerror("Error", "Please try again.")
             self.update_plot()
+        elif text_result:
+            messagebox.showerror("Error", text_result.strip())
+        else:
+            print_fail("Gemini returned no data")
 
     def run(self):
         self.root.mainloop()
