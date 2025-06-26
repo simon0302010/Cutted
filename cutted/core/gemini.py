@@ -64,17 +64,17 @@ class GeminiClient:
 
         function_call = None
         text_response = None
-        for candidate in response.candidates:
-            for part in candidate.content.parts:
-                if part.function_call:
-                    function_call = part.function_call
-                if part.text:
-                    text_response = part.text
+        try:
+            for candidate in response.candidates:
+                for part in candidate.content.parts:
+                    if part.function_call:
+                        function_call = part.function_call
+                    if part.text:
+                        text_response = part.text
+        except TypeError:
+            return None, None
 
-        if function_call:
-            return function_call
-        else:
-            return False
+        return function_call, text_response
         
 if __name__ == "__main__":
     gemini = GeminiClient()
