@@ -37,6 +37,9 @@ class CuttedApp:
         
         button = customtkinter.CTkButton(self.root, text="Load audio", command=self.select_file)
         button.place(relx=0.5, rely=1.0, anchor="s", y=-30)
+        
+        export_button = customtkinter.CTkButton(self.root, text="Export", command=self.export_audio, width=70)
+        export_button.place(relx=0.9, rely=1.0, anchor="s", y=-30)
 
         self.play_button = customtkinter.CTkButton(self.root, text="Play", command=self.play_audio, width=50)
         self.play_button.place(relx=0.3, rely=1.0, anchor="s", y=-30)
@@ -124,7 +127,30 @@ class CuttedApp:
     def stop_audio(self):
         self.AudioProcessor.stop_audio()
         self.is_playing = False
-        self.play_button.configure(text="Play")
+        
+    def export_audio(self):
+        if not hasattr(self.AudioProcessor, "audio") or self.AudioProcessor.audio is None:
+            print_fail("No audio loaded.")
+            return
+        
+        save_path = customtkinter.filedialog.asksaveasfilename(
+            defaultextension=".mp3",
+            filetypes=[
+                ("MP3 files", "*.mp3"),
+                ("WAV files", "*.wav"),
+            ]
+        )
+        
+        if save_path:
+            if save_path.lower().endswith(".wav"):
+                format = "wav"
+            elif save_path.lower().endswith(".mp3"):
+                format = "mp3"
+            else:
+                format = "mp3"
+                
+            self.AudioProcessor.export_audio(save_path, format)
+            print_success(f"Audio exported to {save_path}")
             
     def send_prompt(self):
         if not hasattr(self.AudioProcessor, "audio") or self.AudioProcessor.audio is None:
