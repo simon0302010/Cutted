@@ -17,9 +17,9 @@ dependencies = [
     "matplotlib",
     "numpy",
     "pydub",
-    "simpleaudio",
+    "pygame",
     "google-genai",
-    "dotenv"
+    "python-dotenv"
 ]
 
 [project.urls]

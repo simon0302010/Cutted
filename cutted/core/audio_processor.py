@@ -3,10 +3,26 @@ from pydub.utils import ratio_to_db
 from .logger import *
 import numpy as np
 from matplotlib.figure import Figure
+import pygame
+import io
+import threading
+import time
 
 class AudioProcessor:
     def __init__(self):
         self.audio_path = None
+        self.audio = None
+        self.is_playing = False
+        self.play_thread = None
+        self._init_pygame()
+    
+    def _init_pygame(self):
+        try:
+            pygame.mixer.pre_init(frequency=44100, size=-16, channels=2, buffer=1024)
+            pygame.mixer.init()
+            print_success("Pygame initialized")
+        except pygame.error as e:
+            print_warn(f"Pygame initialization warning: {e}")
     
     def load_audio(self, audio_path: str, volume: float = 1.0):
         self.audio_path = audio_path
@@ -61,3 +77,61 @@ class AudioProcessor:
         end_ms = round(end * 1000)
         
         self.audio = self.audio[:start_ms] + self.audio[end_ms:]
+        
+    def play_audio(self, start_time=0):
+        if self.audio is None:
+            print_fail("No audio loaded.")
+            return False
+        
+        try:
+            self.stop_audio()
+            
+            start_ms = int(start_time * 1000)
+            audio_segment = self.audio[start_ms:]
+            
+            audio_segment = audio_segment.set_frame_rate(22050)
+            audio_segment = audio_segment.set_channels(2)
+            audio_segment = audio_segment.set_sample_width(2)
+            
+            audio_data = io.BytesIO()
+            audio_segment.export(audio_data, format="wav")
+            audio_data.seek(0)
+            
+            pygame.mixer.music.load(audio_data)
+            pygame.mixer.music.play()
+            self.is_playing = True
+            
+            print_success(f"Playing audio from {start_time}s")
+            return True
+        
+        except Exception as e:
+            print_fail(f"Error playing audio: {e}")
+            return False
+        
+    def stop_audio(self):
+        try:
+            if pygame.mixer.get_init():
+                pygame.mixer.music.stop()
+                self.is_playing = False
+                print_info("Audio playback stopped")
+        except Exception as e:
+            print_warn(f"Error stopping audio: {e}")
+            
+    def is_playing(self):
+        try:
+            if pygame.mixer.get_init():
+                return pygame.mixer.music.get_busy()
+            return False
+        except:
+            return False
+        
+    def get_audio_info(self):
+        if self.audio is None:
+            return None
+        
+        return {
+            "duration": self.get_lenght(),
+            "channels": self.audio.channels,
+            "frame_rate": self.audio.frame_rate,
+            "sample_width": self.audio.sample_width
+        }

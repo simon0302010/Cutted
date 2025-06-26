@@ -17,8 +17,6 @@ class CuttedApp:
         self.canvas = None
         self.cursor_line = None
         self.last_slider_update = 0
-        self.play_obj = None
-        self.play_thread = None
         self.is_playing = False
         self.setup_ui()
     
@@ -122,30 +120,19 @@ class CuttedApp:
             print_fail("No audio loaded.")
             return
 
-        self.stop_audio()
-
-        start_ms = int(self.slider.get() * 1000)
-        audio = self.AudioProcessor.audio[start_ms:]
-        raw_data = audio.raw_data
-        num_channels = audio.channels
-        bytes_per_sample = audio.sample_width
-        sample_rate = audio.frame_rate
-
-        def playback():
-            self.is_playing = True
-            self.play_obj = sa.play_buffer(raw_data, num_channels, bytes_per_sample, sample_rate)
-            self.play_obj.wait_done()
-            self.is_playing = False
-
-        self.play_thread = threading.Thread(target=playback, daemon=True)
-        self.play_thread.start()
+        start_time = self.slider.get() if hasattr(self, 'slider') else 0
+        self.AudioProcessor.play_audio(start_time)
 
     def stop_audio(self):
-        if self.play_obj is not None and self.is_playing:
-            self.play_obj.stop()
-            self.is_playing = False
+        self.AudioProcessor.stop_audio()
+        self.is_playing = False
+        self.play_button.configure(text="Play")
             
     def send_prompt(self):
+        if not hasattr(self.AudioProcessor, "audio") or self.AudioProcessor.audio is None:
+            print_fail("No audio loaded.")
+            return
+        
         text = self.entry.get()
         print(f"Prompt: {text}")
         self.entry.delete(0, "end")
