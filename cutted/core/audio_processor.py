@@ -12,7 +12,7 @@ class AudioProcessor:
     def __init__(self):
         self.audio_path = None
         self.audio = None
-        self.is_playing = False
+        self.is_playing_var = False
         self.play_thread = None
         self._init_pygame()
     
@@ -43,7 +43,6 @@ class AudioProcessor:
         samples = samples / np.max(np.abs(samples))
         
         times = np.linspace(0, len(samples) / self.audio.frame_rate, num=len(samples))
-        print(times)
         
         fig = Figure(figsize=(5, 4), facecolor="#242424")
         ax = fig.add_subplot()
@@ -70,13 +69,27 @@ class AudioProcessor:
         return self.duration
     
     def cut(self, start, end):
-        if type(start) == list and type(end) == list:
-            print("Cutting multiple segments")
-        
-        start_ms = round(start * 1000)
-        end_ms = round(end * 1000)
-        
-        self.audio = self.audio[:start_ms] + self.audio[end_ms:]
+        if len(start) == len(end):
+            if len(start) == 1:
+                print_info(f"Cutting from {start[0]} to {end[0]}")
+                start_ms = round(start[0] * 1000)
+                end_ms = round(end[0] * 1000)
+                self.audio = self.audio[:start_ms] + self.audio[end_ms:]
+                return True
+            else:
+                time_sets = list(zip(start, end))
+                subtract_time = 0
+                for single_start, single_end in time_sets:
+                    single_start = single_start - subtract_time
+                    single_end = single_end - subtract_time
+                    print_info(f"Cutting from {single_start} to {single_end}")
+                    start_ms = round(single_start * 1000)
+                    end_ms = round(single_end * 1000)
+                    self.audio = self.audio[:start_ms] + self.audio[end_ms:]
+                    subtract_time += single_end - single_start
+                return True
+        else:
+            return False
         
     def play_audio(self, start_time=0):
         if self.audio is None:
@@ -99,7 +112,7 @@ class AudioProcessor:
             
             pygame.mixer.music.load(audio_data)
             pygame.mixer.music.play()
-            self.is_playing = True
+            self.is_playing_var = True
             
             print_success(f"Playing audio from {start_time}s")
             return True
@@ -112,7 +125,7 @@ class AudioProcessor:
         try:
             if pygame.mixer.get_init():
                 pygame.mixer.music.stop()
-                self.is_playing = False
+                self.is_playing_var = False
                 print_info("Audio playback stopped")
         except Exception as e:
             print_warn(f"Error stopping audio: {e}")
@@ -135,3 +148,6 @@ class AudioProcessor:
             "frame_rate": self.audio.frame_rate,
             "sample_width": self.audio.sample_width
         }
+        
+    def export_audio(self, path, format: str = "mp3"):
+        self.audio.export(path, format=format)
