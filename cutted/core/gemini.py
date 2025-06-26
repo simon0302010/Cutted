@@ -40,7 +40,7 @@ def generate():
                       "output": """success""",
                     },
                 ),
-                types.Part.from_text(text="""now from 5 to 10 and 30 to 40"""),
+                types.Part.from_text(text=str(input("Prompt: "))),
             ],
         ),
     ]
@@ -92,9 +92,9 @@ def generate():
                 text_response = part.text
 
     if text_response:
-        print(text_response)
+        print(f"Text: {text_response}\n")
     if function_call:
-        print(function_call)
+        print(f"Function Call: {function_call}")
 
 if __name__ == "__main__":
     generate()
