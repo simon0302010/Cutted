@@ -2,7 +2,7 @@ import json
 import whisper_timestamped as whisper
 
 class Whisper:
-    def __init__(self, model_size: str = "small", device: str = "cpu"):
+    def __init__(self, model_size: str = "small", device = None):
         self.model = whisper.load_model(
             model_size, device=device
         )
