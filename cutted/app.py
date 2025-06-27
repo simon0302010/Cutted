@@ -19,7 +19,8 @@ except:
 class CuttedApp:
     def __init__(self):
         self.AudioProcessor = audio_processor.AudioProcessor()
-        self.whisper = None
+        if whisper_support:
+            self.whisper = None
         self.gemini = gemini.GeminiClient()
         self.canvas = None
         self.cursor_line = None
@@ -54,13 +55,14 @@ class CuttedApp:
         undo_button = customtkinter.CTkButton(self.root, text="Undo", command=self.undo_last, width=70)
         undo_button.place(relx=0.1, rely=1.0, anchor="s", y=-30)
         
-        self.use_transcript_checkbox = customtkinter.CTkCheckBox(
-            self.root,
-            text="Give Gemini a transcript (very slow)",
-            text_color="#888888",
-            font=("Arial", 12)
-        )
-        self.use_transcript_checkbox.place(relx=0.0, rely=1.0, anchor="w", y=-12)
+        if whisper_support:
+            self.use_transcript_checkbox = customtkinter.CTkCheckBox(
+                self.root,
+                text="Give Gemini a transcript (very slow)",
+                text_color="#888888",
+                font=("Arial", 12)
+            )
+            self.use_transcript_checkbox.place(relx=0.0, rely=1.0, anchor="w", y=-12)
 
         self.play_button = customtkinter.CTkButton(self.root, text="Play", command=self.play_audio, width=50)
         self.play_button.place(relx=0.3, rely=1.0, anchor="s", y=-30)
@@ -182,12 +184,13 @@ class CuttedApp:
         
         text = self.entry.get()
         full_prompt = f"You are a audio editing AI. You are controllable via natural language and editing a audio file. The audio file is {round(self.AudioProcessor.get_lenght())}s long."
-        if self.use_transcript_checkbox.get():
-            if not self.whisper:
-                messagebox.showinfo("Info", "Loading Whisper model. This may take a few minutes depending on your internet connection. See the progress in your command line. If this window appears to be frozen, the transcription is running.")
-                self.whisper = transcribe.Whisper()
-            transcript = self.whisper.transcribe(self.AudioProcessor.audio_path)
-            full_prompt += f"\nThis is a transcript with per word timestamps of the audio:\n{transcript}"
+        if whisper_support:
+            if self.use_transcript_checkbox.get():
+                if not self.whisper:
+                    messagebox.showinfo("Info", "Loading Whisper model. This may take a few minutes depending on your internet connection. See the progress in your command line. If this window appears to be frozen, the transcription is running.")
+                    self.whisper = transcribe.Whisper()
+                transcript = self.whisper.transcribe(self.AudioProcessor.audio_path)
+                full_prompt += f"\nThis is a transcript with per word timestamps of the audio:\n{transcript}"
         full_prompt += f"\n\nUser Prompt: {text}"
         self.entry.delete(0, "end")
         
