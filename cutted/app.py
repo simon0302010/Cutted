@@ -25,6 +25,8 @@ class CuttedApp:
         self.canvas = None
         self.cursor_line = None
         self.last_slider_update = 0
+        self.slider_value = 0
+        self.playback_start_time = 0
         self.is_playing = False
         self.last_states = []
         self.setup_ui()
@@ -113,7 +115,7 @@ class CuttedApp:
         self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
         self.canvas.draw()
         
-        self.audio_lenght = int(round(self.AudioProcessor.get_lenght()))
+        self.audio_lenght = int(round(self.AudioProcessor.get_length()))
         
         slider_width = self.root.winfo_width() - 40
         self.slider = customtkinter.CTkSlider(
@@ -153,11 +155,16 @@ class CuttedApp:
             return
 
         start_time = self.slider.get() if hasattr(self, 'slider') else 0
+        self.playback_start_time = start_time
         self.AudioProcessor.play_audio(start_time)
 
     def stop_audio(self):
-        self.AudioProcessor.stop_audio()
+        rel_pos = self.AudioProcessor.stop_audio()
         self.is_playing = False
+        abs_pos = self.playback_start_time + rel_pos
+        self.slider.set(abs_pos)
+        self.set_cursor(abs_pos)
+        print_info(f"Absolute position in audio: {abs_pos:.2f}s")
         
     def export_audio(self):
         if not hasattr(self.AudioProcessor, "audio") or self.AudioProcessor.audio is None:
@@ -184,6 +191,7 @@ class CuttedApp:
             print_success(f"Audio exported to {save_path}")
             
     def send_prompt(self):
+        print(self.AudioProcessor.get_waveform_summary())
         self.save_state()
 
         if not hasattr(self.AudioProcessor, "audio") or self.AudioProcessor.audio is None:
@@ -192,14 +200,18 @@ class CuttedApp:
         
         text = self.entry.get()
         if text.strip():
-            full_prompt = f"You are a audio editing AI. You are controllable via natural language and editing a audio file. The audio file is {round(self.AudioProcessor.get_lenght())}s long."
+            full_prompt = f"You are a audio editing AI. You are controllable via natural language and editing a audio file. The audio file is {round(self.AudioProcessor.get_length())}s long. The cursor of the user is currently at {self.slider_value}s."
+            full_prompt += "\nHere is a the waveform samples of the audio. You can use them to determine silent parts, loud parts, silences, beats and much more.\nYou are forced to used these if the user requires you to cut out silent of quiet parts for example."
+            full_prompt += "\nAll of your tools should be enough to fullfill almost every task.\nNEVER ASK FOR CONFIRMATION FROM THE USER. DO EVERYTHING!"
+            full_prompt += f"\n{self.AudioProcessor.get_waveform_summary()}\n"
             if whisper_support:
                 if self.use_transcript_checkbox.get():
                     if not self.whisper:
-                        messagebox.showinfo("Info", "Loading Whisper model. This may take a few minutes depending on your internet connection. See the progress in your command line. If this window appears to be frozen, the transcription is running.")
+                        messagebox.showinfo("Info", "Loading Whisper model. This may take a few minutes depending on your internet connection. See the progress in your command line. If this window appears to be frozen, the transcription is running. Press OK to continue.")
                         self.whisper = transcribe.Whisper()
                     transcript = self.whisper.transcribe(self.AudioProcessor.audio_path)
                     full_prompt += f"\nThis is a transcript with per word timestamps of the audio:\n{transcript}"
+                    full_prompt += "\nThe transcript likely has issues. If you need infos about some words they might just be misspelled in the audio."
             full_prompt += f"\n\nUser Prompt: {text}"
             self.entry.delete(0, "end")
             
@@ -220,6 +232,7 @@ class CuttedApp:
             elif text_result:
                 messagebox.showerror("Error", text_result.strip())
             else:
+                messagebox.showerror("Error", "Gemini returned no data")
                 print_fail("Gemini returned no data")
 
     def save_state(self):

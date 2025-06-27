@@ -62,7 +62,21 @@ class AudioProcessor:
         
         return fig
     
-    def get_lenght(self):
+    def get_waveform_summary(self):
+        num_samples = round(self.get_length())
+        if self.audio is None:
+            return "No audio loaded."
+        samples = np.array(self.audio.get_array_of_samples())
+        if self.audio.channels == 2:
+            samples = samples.reshape((-1, 2))
+            samples = samples.mean(axis=1)
+        samples = samples / np.max(np.abs(samples))
+        indices = np.linspace(0, len(samples)-1, num_samples).astype(int)
+        summary = samples[indices]
+        return f"Waveform samples (normalized, {num_samples} points):\n" + \
+            " ".join(f"{x:.2f}" for x in summary)
+    
+    def get_length(self):
         self.duration = self.audio.duration_seconds
         self.duration = round(self.duration, 2)
         return self.duration
@@ -70,17 +84,25 @@ class AudioProcessor:
     def cut(self, start, end):
         if len(start) == len(end):
             if len(start) == 1:
-                print_info(f"Cutting from {start[0]} to {end[0]}")
-                start_ms = round(start[0] * 1000)
-                end_ms = round(end[0] * 1000)
+                single_start = max(0, start[0])
+                single_end = max(0, end[0])
+                if single_end <= single_start:
+                    print_fail("End time must be greater than start time.")
+                    return False
+                print_info(f"Cutting from {single_start} to {single_end}")
+                start_ms = round(single_start * 1000)
+                end_ms = round(single_end * 1000)
                 self.audio = self.audio[:start_ms] + self.audio[end_ms:]
                 return True
             else:
                 time_sets = list(zip(start, end))
                 subtract_time = 0
                 for single_start, single_end in time_sets:
-                    single_start = single_start - subtract_time
-                    single_end = single_end - subtract_time
+                    single_start = max(0, single_start - subtract_time)
+                    single_end = max(0, single_end - subtract_time)
+                    if single_end <= single_start:
+                        print_fail("End time must be greater than start time.")
+                        continue
                     print_info(f"Cutting from {single_start} to {single_end}")
                     start_ms = round(single_start * 1000)
                     end_ms = round(single_end * 1000)
@@ -123,11 +145,15 @@ class AudioProcessor:
     def stop_audio(self):
         try:
             if pygame.mixer.get_init():
+                pos_ms = pygame.mixer.music.get_pos()
+                pos_sec = pos_ms / 1000 if pos_ms >= 0 else 0
                 pygame.mixer.music.stop()
                 self.is_playing_var = False
-                print_info("Audio playback stopped")
+                print_info(f"Audio playback stopped at {pos_sec:.2f}s")
+                return pos_sec
         except Exception as e:
             print_warn(f"Error stopping audio: {e}")
+            return 0
             
     def is_playing(self):
         try:
@@ -142,7 +168,7 @@ class AudioProcessor:
             return None
         
         return {
-            "duration": self.get_lenght(),
+            "duration": self.get_length(),
             "channels": self.audio.channels,
             "frame_rate": self.audio.frame_rate,
             "sample_width": self.audio.sample_width
