@@ -11,4 +11,4 @@
 ---
 
 **Legend:**  
-✅ Done  ⏳ In Progress /
+✅ Done  ⏳ In Progress / Planned
