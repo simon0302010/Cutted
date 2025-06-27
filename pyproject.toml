@@ -22,5 +22,8 @@ dependencies = [
     "python-dotenv"
 ]
 
+[project.optional-dependencies]
+whisper = ["whisper-timestamped"]
+
 [project.urls]
 Homepage = "https://github.com/simon0302010/Cutted"
