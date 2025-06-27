@@ -16,6 +16,7 @@ class CuttedApp:
         self.cursor_line = None
         self.last_slider_update = 0
         self.is_playing = False
+        self.last_states = []
         self.setup_ui()
     
     def setup_ui(self):
@@ -40,6 +41,9 @@ class CuttedApp:
         
         export_button = customtkinter.CTkButton(self.root, text="Export", command=self.export_audio, width=70)
         export_button.place(relx=0.9, rely=1.0, anchor="s", y=-30)
+        
+        undo_button = customtkinter.CTkButton(self.root, text="Undo", command=self.undo_last, width=70)
+        undo_button.place(relx=0.1, rely=1.0, anchor="s", y=-30)
 
         self.play_button = customtkinter.CTkButton(self.root, text="Play", command=self.play_audio, width=50)
         self.play_button.place(relx=0.3, rely=1.0, anchor="s", y=-30)
@@ -153,6 +157,8 @@ class CuttedApp:
             print_success(f"Audio exported to {save_path}")
             
     def send_prompt(self):
+        self.save_state()
+
         if not hasattr(self.AudioProcessor, "audio") or self.AudioProcessor.audio is None:
             print_fail("No audio loaded.")
             return
@@ -177,6 +183,22 @@ class CuttedApp:
             messagebox.showerror("Error", text_result.strip())
         else:
             print_fail("Gemini returned no data")
+
+    def save_state(self):
+        if hasattr(self.AudioProcessor, "audio") and self.AudioProcessor.audio is not None:
+            self.last_states.append(self.AudioProcessor.audio._spawn(self.AudioProcessor.audio.raw_data))
+            if len(self.last_states) > 10:
+                self.last_states.pop(0) 
+           
+    def undo_last(self):
+        if len(self.last_states) == 0:
+            print_warn("No previous states to undo")
+            messagebox.showwarning("Warning", "No previous states to undo")
+            return
+        
+        self.AudioProcessor.audio = self.last_states.pop()
+        self.update_plot()
+        print_info("Undid last action")
 
     def run(self):
         self.root.mainloop()
