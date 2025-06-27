@@ -1,47 +1,34 @@
+![PyPI](https://img.shields.io/pypi/v/cutted?color=blue)
+![PyPI - License](https://img.shields.io/pypi/l/lyriks-video)
+![Hackatime](https://hackatime-badge.hackclub.com/U08HC7N4JJW/Cutted)
+
 # Cutted
-AI-powered audio editor controllable via natural language
 
-Note: This app is currently not functional.
+AI-powered audio editor controlled by natural language 🚀
 
-# Installation
+Let AI handle your audio editing with simple commands:
+- Automatically detect quiet or loud parts
+- Transcribe audio (if Whisper is installed)
+- Cut, trim, or adjust volume for specific segments
 
-Install dependencies:
+## Installation
 
-**Debian:**
+1. **Install system dependencies (e.g., FFmpeg).**  
+2. **Install Cutted**  
 ```bash
-sudo apt update
-sudo apt install ffmpeg git
+pip install cutted
 ```
-
-**Arch Linux:**
+**With Whisper support**  
 ```bash
-sudo pacman -Syu ffmpeg git
+pip install cutted[whisper]
 ```
+  
+## Usage
 
-Clone the repository:
-
-```bash
-git clone https://github.com/simon0302010/Cutted.git
-cd Cutted
-```
-
-Create a virtual environment:
-
-```bash
-python -m venv venv
-source venv/bin/activate
-```
-
-Install the package:
-
-```bash
-pip install .
-```
-
-# Usage
-
-Run the package:
-
-```bash
-python -m cutted
-```
+1. **Launch the app:**  
+   ```bash
+   python -m cutted
+   ```
+2. **Load an audio file** (MP3, WAV, etc.)  
+3. **Play, Cut, Undo** – all from the GUI or with text commands ✂️
+4. **Export** as MP3 or WAV  
