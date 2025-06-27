@@ -1,5 +1,6 @@
 import os
 import sys
+import base64
 from google import genai
 from google.genai import types
 
@@ -15,13 +16,21 @@ class GeminiClient:
             api_key=GEMINI_API_KEY,
         )
     
-    def generate(self, prompt: str, model: str = "gemini-2.0-flash"):
+    def generate(self, prompt: str, model: str = "gemini-2.0-flash", audio_base64 = None):
+        parts=[
+            types.Part.from_text(text=prompt),
+        ]
+        
+        if audio_base64:
+            parts.append(types.Part.from_bytes(
+                mime_type="audio/mpeg",
+                data=base64.b64decode(audio_base64)
+            ))
+        
         contents = [
             types.Content(
                 role="user",
-                parts=[
-                    types.Part.from_text(text=prompt),
-                ],
+                parts=parts
             ),
         ]
         tools = [

@@ -58,11 +58,19 @@ class CuttedApp:
         if whisper_support:
             self.use_transcript_checkbox = customtkinter.CTkCheckBox(
                 self.root,
-                text="Give Gemini a transcript (very slow)",
+                text="Send transcript to Gemini (slower, more accurate)",
                 text_color="#888888",
                 font=("Arial", 12)
             )
             self.use_transcript_checkbox.place(relx=0.0, rely=1.0, anchor="w", y=-12)
+            
+        self.use_audio_checkbox = customtkinter.CTkCheckBox(
+            self.root,
+            text="Send audio to Gemini (buggy)",
+            text_color="#888888",
+            font=("Arial", 12)
+        )
+        self.use_audio_checkbox.place(relx=1.0, rely=1.0, anchor="e", y=-12)
 
         self.play_button = customtkinter.CTkButton(self.root, text="Play", command=self.play_audio, width=50)
         self.play_button.place(relx=0.3, rely=1.0, anchor="s", y=-30)
@@ -183,32 +191,36 @@ class CuttedApp:
             return
         
         text = self.entry.get()
-        full_prompt = f"You are a audio editing AI. You are controllable via natural language and editing a audio file. The audio file is {round(self.AudioProcessor.get_lenght())}s long."
-        if whisper_support:
-            if self.use_transcript_checkbox.get():
-                if not self.whisper:
-                    messagebox.showinfo("Info", "Loading Whisper model. This may take a few minutes depending on your internet connection. See the progress in your command line. If this window appears to be frozen, the transcription is running.")
-                    self.whisper = transcribe.Whisper()
-                transcript = self.whisper.transcribe(self.AudioProcessor.audio_path)
-                full_prompt += f"\nThis is a transcript with per word timestamps of the audio:\n{transcript}"
-        full_prompt += f"\n\nUser Prompt: {text}"
-        self.entry.delete(0, "end")
-        
-        function_call, text_result = self.gemini.generate(full_prompt)
-        
-        if function_call:
-            print_info(f"Gemini called {function_call.name}")
-            if function_call.name == "cut_audio":
-                print_info("Cut function called")
-                args = function_call.args
-                result = self.AudioProcessor.cut(args["start"], args["end"])
-                if not result:
-                    messagebox.showerror("Error", "Please try again.")
-            self.update_plot()
-        elif text_result:
-            messagebox.showerror("Error", text_result.strip())
-        else:
-            print_fail("Gemini returned no data")
+        if text.strip():
+            full_prompt = f"You are a audio editing AI. You are controllable via natural language and editing a audio file. The audio file is {round(self.AudioProcessor.get_lenght())}s long."
+            if whisper_support:
+                if self.use_transcript_checkbox.get():
+                    if not self.whisper:
+                        messagebox.showinfo("Info", "Loading Whisper model. This may take a few minutes depending on your internet connection. See the progress in your command line. If this window appears to be frozen, the transcription is running.")
+                        self.whisper = transcribe.Whisper()
+                    transcript = self.whisper.transcribe(self.AudioProcessor.audio_path)
+                    full_prompt += f"\nThis is a transcript with per word timestamps of the audio:\n{transcript}"
+            full_prompt += f"\n\nUser Prompt: {text}"
+            self.entry.delete(0, "end")
+            
+            if self.use_audio_checkbox.get():
+                function_call, text_result = self.gemini.generate(full_prompt, audio_base64=self.AudioProcessor.get_audio_base64())
+            else:
+                function_call, text_result = self.gemini.generate(full_prompt)
+            
+            if function_call:
+                print_info(f"Gemini called {function_call.name}")
+                if function_call.name == "cut_audio":
+                    print_info("Cut function called")
+                    args = function_call.args
+                    result = self.AudioProcessor.cut(args["start"], args["end"])
+                    if not result:
+                        messagebox.showerror("Error", "Please try again.")
+                self.update_plot()
+            elif text_result:
+                messagebox.showerror("Error", text_result.strip())
+            else:
+                print_fail("Gemini returned no data")
 
     def save_state(self):
         if hasattr(self.AudioProcessor, "audio") and self.AudioProcessor.audio is not None:

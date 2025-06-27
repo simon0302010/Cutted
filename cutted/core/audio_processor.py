@@ -4,9 +4,8 @@ from .logger import *
 import numpy as np
 from matplotlib.figure import Figure
 import pygame
+import base64
 import io
-import threading
-import time
 
 class AudioProcessor:
     def __init__(self):
@@ -151,3 +150,11 @@ class AudioProcessor:
         
     def export_audio(self, path, format: str = "mp3"):
         self.audio.export(path, format=format)
+        
+    def get_audio_base64(self):
+        buffer = io.BytesIO()
+        self.audio.export(buffer, format="mp3")
+        buffer.seek(0)
+        audio_bytes = buffer.read()
+        audio_base64 = base64.b64encode(audio_bytes)
+        return audio_base64
