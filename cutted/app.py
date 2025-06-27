@@ -3,11 +3,18 @@ import customtkinter
 import tkinter.messagebox as messagebox
 from .core import gemini
 from .core.logger import *
-from .core import transcribe
 from .core import audio_processor
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 customtkinter.set_appearance_mode("Dark")
+
+try:
+    from .core import transcribe
+    whisper_support = True
+    print_info("Whisper support present.")
+except:
+    whisper_support = False
+    print_info("Whisper support is not present.")
 
 class CuttedApp:
     def __init__(self):
@@ -59,7 +66,7 @@ class CuttedApp:
         self.play_button.place(relx=0.3, rely=1.0, anchor="s", y=-30)
         self.stop_button = customtkinter.CTkButton(self.root, text="Stop", command=self.stop_audio, width=50)
         self.stop_button.place(relx=0.7, rely=1.0, anchor="s", y=-30)
-
+        
         self.input_frame = customtkinter.CTkFrame(self.root, fg_color="transparent", height=36)
         self.input_frame.place(relx=0.5, rely=1.0, anchor="s", y=-90, relwidth=0.8)
 
