@@ -1,5 +1,6 @@
 import base64
 import io
+import tkinter.messagebox as messagebox
 
 import numpy as np
 import pygame
@@ -25,6 +26,7 @@ class AudioProcessor:
             print_success("Pygame initialized")
         except pygame.error as e:
             print_warn(f"Pygame initialization warning: {e}")
+            messagebox.showwarning("Warning", f"Pygame initialization warning: {e}")
 
     def load_audio(self, audio_path: str, volume: float = 1.0):
         self.audio_path = audio_path
@@ -188,7 +190,8 @@ class AudioProcessor:
             if pygame.mixer.get_init():
                 return pygame.mixer.music.get_busy()
             return False
-        except:
+        except Exception as e:
+            print_warn(f"An error occured while checking playing status: {e}")
             return False
 
     def get_audio_info(self):

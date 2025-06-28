@@ -210,6 +210,7 @@ class CuttedApp:
             or self.AudioProcessor.audio is None
         ):
             print_fail("No audio loaded.")
+            messagebox.showwarning("Warning", "No audio loaded.")
             return
 
         start_time = self.slider.get() if hasattr(self, "slider") else 0
@@ -230,6 +231,7 @@ class CuttedApp:
             or self.AudioProcessor.audio is None
         ):
             print_fail("No audio loaded.")
+            messagebox.showwarning("Warning", "No audio loaded.")
             return
 
         save_path = customtkinter.filedialog.asksaveasfilename(
@@ -272,6 +274,7 @@ class CuttedApp:
             or self.AudioProcessor.audio is None
         ):
             print_fail("No audio loaded.")
+            messagebox.showwarning("Warning", "No audio loaded.")
             return
 
         text = self.entry.get()
