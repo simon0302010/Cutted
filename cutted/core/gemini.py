@@ -17,7 +17,10 @@ class GeminiClient:
         )
         self.contents = []
     
-    def generate(self, prompt: str, model: str = "gemini-2.0-flash", audio_base64 = None):
+    def generate(self, prompt: str, model: str = "gemini-2.0-flash", audio_base64 = None, use_history = 0):
+        if not use_history:
+            self.contents = []
+        
         parts=[
             types.Part.from_text(text=prompt),
         ]

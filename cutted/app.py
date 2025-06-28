@@ -1,4 +1,5 @@
 import time
+import threading
 import customtkinter
 import tkinter.messagebox as messagebox
 from .core import gemini
@@ -37,6 +38,8 @@ class CuttedApp:
         self.root.geometry("600x400")
         
         self.root.bind("<Configure>", self.on_resize)
+        
+        self.use_history_var = customtkinter.BooleanVar(value=False)
         
         self.plot_frame = customtkinter.CTkFrame(self.root, height=250, fg_color="transparent")
         self.plot_frame.pack(
@@ -82,6 +85,16 @@ class CuttedApp:
         self.input_frame = customtkinter.CTkFrame(self.root, fg_color="transparent", height=36)
         self.input_frame.place(relx=0.5, rely=1.0, anchor="s", y=-90, relwidth=0.8)
 
+        settings_button = customtkinter.CTkButton(
+            self.input_frame,
+            text="⚙",
+            command=self.open_settings,
+            width=36,
+            height=36,
+            font=("Arial", 18)
+        )
+        settings_button.pack(side="left", padx=(0, 5))
+
         self.entry = customtkinter.CTkEntry(self.input_frame, height=32)
         self.entry.pack(side="left", fill="both", expand=True, padx=(0, 5))
 
@@ -89,6 +102,7 @@ class CuttedApp:
             self.input_frame,
             text="➤",
             width=36,
+            height=36,
             command=self.send_prompt
         )
         self.send_button.pack(side="right")
@@ -141,6 +155,19 @@ class CuttedApp:
 
         self.cursor_line = self.ax.axvline(x=self.slider_value, color="red", linewidth=2)
         self.canvas.draw_idle()
+        
+    def show_spinner(self, message="Transcribing..."):
+        spinner_win = customtkinter.CTkToplevel(self.root)
+        spinner_win.title("Please wait")
+        spinner_win.geometry("250x100")
+        spinner_win.grab_set()
+        spinner_win.resizable(False, False)
+        label = customtkinter.CTkLabel(spinner_win, text=message)
+        label.pack(pady=10)
+        progress = customtkinter.CTkProgressBar(spinner_win, mode="indeterminate")
+        progress.pack(pady=10, padx=20, fill="x")
+        progress.start()
+        return spinner_win, progress
         
     def set_cursor(self, value):
         now = time.time()
@@ -199,6 +226,18 @@ class CuttedApp:
             self.AudioProcessor.export_audio(save_path, format)
             print_success(f"Audio exported to {save_path}")
             
+    def open_settings(self):
+        settings_window = customtkinter.CTkToplevel(self.root)
+        settings_window.title("Settings")
+        settings_window.geometry("300x200")
+                
+        use_history = customtkinter.CTkCheckBox(
+            settings_window,
+            text="Use chat history (Can produce errors)",
+            variable=self.use_history_var
+        )
+        use_history.pack(pady=10)
+        
     def send_prompt(self):
         print(self.AudioProcessor.get_waveform_summary())
         self.save_state()
@@ -208,26 +247,26 @@ class CuttedApp:
             return
         
         text = self.entry.get()
-        if text.strip():
-            full_prompt = f"You are a audio editing AI. You are controllable via natural language and editing a audio file. The audio file is {round(self.AudioProcessor.get_length(), 2)}s long. The cursor of the user is currently at {self.slider_value}s."
-            full_prompt += "\nHere is a the waveform samples of the audio. You can use them to determine silent parts, loud parts, silences, beats and much more.\nYou are forced to used these if the user requires you to cut out silent of quiet parts for example."
-            full_prompt += "\nAll of your tools should be enough to fullfill almost every task.\nNEVER ASK FOR CONFIRMATION FROM THE USER. DO EVERYTHING!"
-            full_prompt += f"\n{self.AudioProcessor.get_waveform_summary()}\n"
-            if whisper_support:
-                if self.use_transcript_checkbox.get():
-                    if not self.whisper:
-                        messagebox.showinfo("Info", "Loading Whisper model. This may take a few minutes depending on your internet connection. See the progress in your command line. If this window appears to be frozen, the transcription is running. Press OK to continue.")
-                        self.whisper = transcribe.Whisper()
-                    transcript = self.whisper.transcribe(self.AudioProcessor.audio_path)
-                    full_prompt += f"\nThis is a transcript with per word timestamps of the audio:\n{transcript}"
-                    full_prompt += "\nThe transcript likely has issues. If you need infos about some words they might just be misspelled in the audio."
+        if not text.strip():
+            return
+        
+        def after_transcribe(transcript):
+            full_prompt = (
+                f"You are a audio editing AI. You are controllable via natural language and editing a audio file. The audio file is {round(self.AudioProcessor.get_length(), 2)}s long. The cursor of the user is currently at {self.slider_value}s."
+                "\nHere is a the waveform samples of the audio. You can use them to determine silent parts, loud parts, silences, beats and much more.\nYou are forced to used these if the user requires you to cut out silent of quiet parts for example."
+                "\nAll of your tools should be enough to fullfill almost every task.\nNEVER ASK FOR CONFIRMATION FROM THE USER. DO EVERYTHING!"
+                f"\n{self.AudioProcessor.get_waveform_summary()}\n"
+            )
+            if transcript:
+                full_prompt += f"\nThis is a transcript with per word timestamps of the audio:\n{transcript}"
+                full_prompt += "\nThe transcript likely has issues. If you need infos about some words they might just be misspelled in the audio."
             full_prompt += f"\n\nUser Prompt: {text}"
             self.entry.delete(0, "end")
             
             if self.use_audio_checkbox.get():
-                function_call, text_result = self.gemini.generate(full_prompt, audio_base64=self.AudioProcessor.get_audio_base64())
+                function_call, text_result = self.gemini.generate(full_prompt, audio_base64=self.AudioProcessor.get_audio_base64(), use_history=self.use_history_var.get())
             else:
-                function_call, text_result = self.gemini.generate(full_prompt)
+                function_call, text_result = self.gemini.generate(full_prompt, use_history=self.use_history_var.get())
             
             if function_call:
                 print_info(f"Gemini called {function_call.name}")
@@ -249,6 +288,22 @@ class CuttedApp:
             else:
                 messagebox.showerror("Error", "Gemini returned no data")
                 print_fail("Gemini returned no data")
+                
+        if whisper_support and self.use_transcript_checkbox.get():
+            if not self.whisper:
+                messagebox.showinfo("Info", "Loading Whisper model. This may take a few minutes depending on your internet connection. See the progress in your command line. If this window appears to be frozen, the transcription is running. Press OK to continue.")
+                self.whisper = transcribe.Whisper()
+
+            spinner_win, _ = self.show_spinner("Transcribing...")
+
+            def transcribe_thread():
+                _, transcript = self.whisper.transcribe(self.AudioProcessor.audio_path)
+                self.root.after(0, lambda: (spinner_win.destroy(), after_transcribe(transcript)))
+
+            threading.Thread(target=transcribe_thread, daemon=True).start()
+            return
+        
+        after_transcribe(None)
 
     def save_state(self):
         if hasattr(self.AudioProcessor, "audio") and self.AudioProcessor.audio is not None:
