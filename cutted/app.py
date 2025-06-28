@@ -109,45 +109,54 @@ class CuttedApp:
     def update_plot(self):
         if self.canvas:
             self.canvas.get_tk_widget().destroy()
-        
+        if hasattr(self, "slider") and self.slider is not None:
+            self.slider.destroy()
+
         fig = self.AudioProcessor.plot_audio()
         self.ax = fig.axes[0]
         self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
         self.canvas.draw()
-        
-        self.audio_lenght = int(round(self.AudioProcessor.get_length()))
-        
+
+        self.audio_length = float(self.AudioProcessor.get_length())
+
         slider_width = self.root.winfo_width() - 40
+        if self.slider_value > self.audio_length:
+            self.slider_value = self.audio_length
+        if self.slider_value < 0:
+            self.slider_value = 0
+
         self.slider = customtkinter.CTkSlider(
-            self.root, from_=0, to=self.audio_lenght, command=self.set_cursor, width=slider_width
+            self.root, from_=0, to=self.audio_length, command=self.set_cursor, width=slider_width
         )
-        self.slider.set(0)
-        
+        self.slider.set(self.slider_value)
         self.slider.place(relx=0.5, rely=1.0, anchor="s", y=-130)
-        
+        self.set_cursor(self.slider_value)
+
         self.canvas.get_tk_widget().pack(
             fill=customtkinter.BOTH, 
             expand=True, 
             padx=10,
             pady=10,
         )
-        
-        self.cursor_line = self.ax.axvline(x=0, color="red", linewidth=2)
+
+        self.cursor_line = self.ax.axvline(x=self.slider_value, color="red", linewidth=2)
         self.canvas.draw_idle()
         
     def set_cursor(self, value):
         now = time.time()
-        if now - self.last_slider_update < 0.1:  # 100ms
+        if now - self.last_slider_update < 0.05:  # 100ms
             return
         self.last_slider_update = now
         
-        self.slider_value = round(value)
+        self.slider_value = round(value, 2)
         
         if self.cursor_line:
             self.cursor_line.set_xdata([self.slider_value, self.slider_value])
             self.canvas.draw_idle()
+            self.slider.set(self.slider_value)
+            self.set_cursor(self.slider_value)
         
-        print(f"Slider Value: {self.slider_value}")
+        print_info(f"Slider Value: {self.slider_value}")
 
     def play_audio(self):
         if not hasattr(self.AudioProcessor, "audio") or self.AudioProcessor.audio is None:
@@ -200,7 +209,7 @@ class CuttedApp:
         
         text = self.entry.get()
         if text.strip():
-            full_prompt = f"You are a audio editing AI. You are controllable via natural language and editing a audio file. The audio file is {round(self.AudioProcessor.get_length())}s long. The cursor of the user is currently at {self.slider_value}s."
+            full_prompt = f"You are a audio editing AI. You are controllable via natural language and editing a audio file. The audio file is {round(self.AudioProcessor.get_length(), 2)}s long. The cursor of the user is currently at {self.slider_value}s."
             full_prompt += "\nHere is a the waveform samples of the audio. You can use them to determine silent parts, loud parts, silences, beats and much more.\nYou are forced to used these if the user requires you to cut out silent of quiet parts for example."
             full_prompt += "\nAll of your tools should be enough to fullfill almost every task.\nNEVER ASK FOR CONFIRMATION FROM THE USER. DO EVERYTHING!"
             full_prompt += f"\n{self.AudioProcessor.get_waveform_summary()}\n"
