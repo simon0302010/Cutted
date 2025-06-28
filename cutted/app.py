@@ -237,6 +237,12 @@ class CuttedApp:
                     result = self.AudioProcessor.cut(args["start"], args["end"])
                     if not result:
                         messagebox.showerror("Error", "Please try again.")
+                if function_call.name == "change_volume":
+                    print_info("Change Volume function called")
+                    args = function_call.args
+                    result = self.AudioProcessor.change_volume(args["start"], args["end"], args["volume"])
+                    if not result:
+                        messagebox.showerror("Error", "Please try again.")
                 self.update_plot()
             elif text_result:
                 messagebox.showerror("Error", text_result.strip())
