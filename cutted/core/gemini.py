@@ -1,6 +1,8 @@
+import base64
 import os
 import sys
-import base64
+import tkinter.messagebox as messagebox
+
 from google import genai
 from google.genai import types
 
@@ -8,7 +10,12 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 if not GEMINI_API_KEY:
     print("Please set the environment variable GEMINI_API_KEY to your Gemini API Key.")
+    messagebox.showerror(
+        "Error",
+        "Please set the environment variable GEMINI_API_KEY to your Gemini API Key.",
+    )
     sys.exit(0)
+
 
 class GeminiClient:
     def __init__(self):
@@ -16,27 +23,29 @@ class GeminiClient:
             api_key=GEMINI_API_KEY,
         )
         self.contents = []
-    
-    def generate(self, prompt: str, model: str = "gemini-2.0-flash", audio_base64 = None, use_history = 0):
+
+    def generate(
+        self,
+        prompt: str,
+        model: str = "gemini-2.0-flash",
+        audio_base64=None,
+        use_history=0,
+    ):
         if not use_history:
             self.contents = []
-        
-        parts=[
+
+        parts = [
             types.Part.from_text(text=prompt),
         ]
-        
+
         if audio_base64:
-            parts.append(types.Part.from_bytes(
-                mime_type="audio/mpeg",
-                data=base64.b64decode(audio_base64)
-            ))
-        
-        self.contents.append(
-            types.Content(
-                role="user",
-                parts=parts
+            parts.append(
+                types.Part.from_bytes(
+                    mime_type="audio/mpeg", data=base64.b64decode(audio_base64)
+                )
             )
-        )
+
+        self.contents.append(types.Content(role="user", parts=parts))
         tools = [
             types.Tool(
                 function_declarations=[
@@ -124,29 +133,22 @@ class GeminiClient:
                         text_response = part.text
         except TypeError:
             pass
-        
+
         model_parts = []
         if text_response:
-            model_parts.append(
-                types.Part.from_text(text=text_response)
-            )
+            model_parts.append(types.Part.from_text(text=text_response))
         if function_call:
             model_parts.append(
                 types.Part.from_function_call(
-                    name=function_call.name,
-                    args=function_call.args
+                    name=function_call.name, args=function_call.args
                 )
             )
-            
-        self.contents.append(
-            types.Content(
-                role="model",
-                parts=model_parts
-            )
-        )
+
+        self.contents.append(types.Content(role="model", parts=model_parts))
 
         return function_call, text_response
-        
+
+
 if __name__ == "__main__":
     gemini = GeminiClient()
     print(gemini.generate("cut from 10 to 20.5"))
