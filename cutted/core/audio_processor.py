@@ -112,6 +112,28 @@ class AudioProcessor:
         else:
             return False
         
+    def change_volume(self, start, end, volume):
+        if len(start) == len(end) == len(volume):
+            time_sets = list(zip(start, end, volume))
+            for single_start, single_end, single_volume in time_sets:
+                if single_end <= single_start:
+                    print_fail("End time must be greater than start time.")
+                    continue
+                print_info(f"Changing volume of {single_start} - {single_end} to {str(single_volume)}")
+                
+                start_ms = round(single_start * 1000)
+                end_ms = round(single_end * 1000)
+                part1 = self.audio[:start_ms]
+                part2 = self.audio[start_ms:end_ms]
+                part3 = self.audio[end_ms:]
+                
+                part2 = part2.apply_gain(ratio_to_db(single_volume))
+                
+                self.audio = part1 + part2 + part3
+            return True
+        else:
+            return False
+            
     def play_audio(self, start_time=0):
         if self.audio is None:
             print_fail("No audio loaded.")
