@@ -139,7 +139,7 @@ class CuttedApp:
         if hasattr(self, "slider") and self.slider is not None:
             self.slider.destroy()
 
-        fig = self.AudioProcessor.plot_audio()
+        fig, _ = self.AudioProcessor.plot_audio()
         self.ax = fig.axes[0]
         self.canvas = FigureCanvasTkAgg(fig, master=self.plot_frame)
         self.canvas.draw()

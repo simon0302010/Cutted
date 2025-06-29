@@ -65,10 +65,16 @@ class AudioProcessor:
         ax.set_xlim(times[0], times[-1])
         ax.set_ylim(np.min(samples), np.max(samples))
 
-        return fig
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", bbox_inches="tight", pad_inches=0)
+        buf.seek(0)
+        img_base64 = base64.b64encode(buf.read()).decode("utf-8")
+        buf.close()
+
+        return fig, img_base64
 
     def get_waveform_summary(self):
-        num_samples = round(self.get_length())
+        num_samples = round(self.get_length()) * 2
         if self.audio is None:
             return "No audio loaded."
         samples = np.array(self.audio.get_array_of_samples())
