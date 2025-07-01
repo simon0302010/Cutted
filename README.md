@@ -105,3 +105,4 @@ set GEMINI_API_KEY=your-gemini-api-key
 **Windows (PowerShell):**
 ```powershell
 $env:GEMINI_API_KEY="your-gemini-api-key"
+```
