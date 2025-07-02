@@ -24,6 +24,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+test = ["pytest"]
 whisper = ["whisper-timestamped"]
 
 [project.urls]
