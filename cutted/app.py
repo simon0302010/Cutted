@@ -23,6 +23,7 @@ except ModuleNotFoundError:
 class CuttedApp:
     def __init__(self):
         self.AudioProcessor = audio_processor.AudioProcessor()
+        self.AudioProcessor._init_pygame()
         if whisper_support:
             self.whisper = None
         self.gemini = gemini.GeminiClient()

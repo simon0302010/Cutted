@@ -17,7 +17,6 @@ class AudioProcessor:
         self.audio = None
         self.is_playing_var = False
         self.play_thread = None
-        self._init_pygame()
 
     def _init_pygame(self):
         try:
