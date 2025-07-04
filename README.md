@@ -22,8 +22,9 @@
 
 ## Install
 
-1. Make sure [FFmpeg](https://ffmpeg.org/) is installed.
-2. Install Cutted:
+1. Make sure your Python interpreter has [Tkinter support](https://stackoverflow.com/questions/5459444/tkinter-python-may-not-be-configured-for-tk)
+2. Make sure [FFmpeg](https://ffmpeg.org/) is installed.
+3. Install Cutted:
    ```bash
    pip install cutted
    ```
